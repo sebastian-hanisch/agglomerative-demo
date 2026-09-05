@@ -7,9 +7,13 @@ echter DAG mit einem Zusammenfluss:
 
 ```
 kmeans-demo → dbscan-demo ──┐
-                             ├──> (künftig) HDBSCAN
+                             ├──> hdbscan-demo
 agglomerative-demo ──────────┘
 ```
+
+[hdbscan-demo](../hdbscan-demo) ist inzwischen gebaut und weist live nach, dass HDBSCAN
+sowohl das Chaining-Problem dieser Demo als auch dbscan-demos Dichte-Ungleichgewicht-
+Problem löst.
 
 HDBSCAN baut buchstäblich auf einer Hierarchie via Single-Linkage-artigem Merging auf -
 nur mit einer dichte-angepassten ("mutual reachability") statt der rohen Distanz. Diese
