@@ -1,5 +1,7 @@
 # Agglomeratives Clustering für schrittweise Depot-Konsolidierung – Streamlit-Demo
 
+**[→ Demo live ausprobieren](https://sebastianhanisch-agglomerative-demo.streamlit.app/)**
+
 Viertes Stück der "Konzepte"-Reihe für die Website "Sebastian Hanisch – Operations
 Research und Machine Learning", **zweiter, unabhängiger Vorläufer zu HDBSCAN** neben
 [dbscan-demo](../dbscan-demo) - kein drittes Glied einer Kette. Die Lineage ist damit ein
