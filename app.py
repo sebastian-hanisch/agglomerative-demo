@@ -260,7 +260,7 @@ Zufall) für alle vier Linkage-Kriterien, jeweils beim selben Ziel-k geschnitten
 )
 
 scores = _compute_linkage_comparison(instance, int(target_k))
-st.plotly_chart(build_rand_index_bar_chart(scores), width="stretch")
+st.plotly_chart(build_rand_index_bar_chart(scores), width="stretch", key="rand_index_bar")
 
 gap = max(scores.values()) - min(scores.values())
 if gap > 0.3:
