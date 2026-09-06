@@ -11,11 +11,17 @@ echter DAG mit einem Zusammenfluss:
 kmeans-demo → dbscan-demo ──┐
                              ├──> hdbscan-demo
 agglomerative-demo ──────────┘
+kmeans-demo ─┐
+             ├──> divisive-demo
+agglomerative-demo ─┘
 ```
 
 [hdbscan-demo](../hdbscan-demo) ist inzwischen gebaut und weist live nach, dass HDBSCAN
 sowohl das Chaining-Problem dieser Demo als auch dbscan-demos Dichte-Ungleichgewicht-
-Problem löst.
+Problem löst. [divisive-demo](../divisive-demo) (Bisecting k-Means) ist dagegen kein Fix,
+sondern ein bewusster Kontrast: dieselbe Art Hierarchie, top-down statt bottom-up gebaut -
+Single-Linkages Chaining-Neigung, hier die Schwäche bei einer Brücke, ist dort - ohne
+Brücke - genau der Mechanismus, der nicht-konvexe Formen erfolgreich trennt.
 
 HDBSCAN baut buchstäblich auf einer Hierarchie via Single-Linkage-artigem Merging auf -
 nur mit einer dichte-angepassten ("mutual reachability") statt der rohen Distanz. Diese
