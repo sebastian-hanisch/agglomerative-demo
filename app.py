@@ -41,8 +41,8 @@ st.set_page_config(page_title="Agglomeratives Clustering – Sebastian Hanisch",
 
 
 @st.cache_data(show_spinner=False)
-def _compute_run(n_points, k, spread, size_imbalance, bridge_strength, seed, linkage):
-    instance = generate_instance(n_points, k, spread, size_imbalance, bridge_strength, seed)
+def _compute_run(n_points, k, spread, size_imbalance, bridge_strength, shape, seed, linkage):
+    instance = generate_instance(n_points, k, spread, size_imbalance, bridge_strength, seed, shape=shape)
     result = run(instance.as_array(), linkage)
     return instance, result
 
@@ -116,6 +116,7 @@ PRESET_HELP = {
     "Schwerer Fall (Chaining bei Single-Linkage)": "Zwei Gruppen plus eine dünne Punktbrücke dazwischen - Single-Linkage verschmilzt sie viel zu früh, die übrigen Kriterien bleiben sauber getrennt.",
     "Ungleiche Clustergrößen": "Zeigt eine zweite Eigenart: Single-Linkage neigt zu einem großen Ketten-Cluster plus Einzelpunkten, Ward zu ausgeglicheneren Größen.",
     "Viele Gruppen (Dendrogramm wächst)": "Mehr wahre Gruppen zeigen ein deutlich komplexeres Dendrogramm.",
+    "Nicht-konvexe Formen (Single-Linkage im Vorteil)": "Zwei ineinander verschlungene Halbmonde ohne Brücke - hier dreht sich das Bild um: Single-Linkage folgt der gebogenen Form und trennt sauber, während Complete/Average/Ward quer über die Bögen schneiden.",
 }
 preset_cols = st.columns(len(C.PRESETS))
 for i, name in enumerate(C.PRESETS.keys()):
@@ -150,6 +151,14 @@ with st.sidebar:
     )
     seed = st.number_input("Zufalls-Seed", *bounds("seed_input"), key="seed_input", step=1)
 
+    st.markdown("**Punktwolken-Form**")
+    shape = st.radio(
+        "Form", options=C.SHAPES, key="shape_radio", format_func=lambda s: C.SHAPE_LABELS[s],
+        help="„Gruppen“: runde, konvexe Cluster. „Halbmonde“: nicht-konvexe Bögen - hier "
+        "kann Single-Linkage sein sonst problematisches Chaining-Verhalten sogar zum "
+        "Vorteil machen, weil es der gebogenen Form folgt.",
+    )
+
     st.markdown("**Clustering**")
     linkage = st.radio(
         "Linkage-Kriterium", options=C.LINKAGES, key="linkage_radio",
@@ -169,16 +178,16 @@ with st.sidebar:
         help="Würfelt einen neuen Zufalls-Seed für die Standorte.",
     )
 
-sync_query_params(n_points, k, spread, size_imbalance, bridge_strength, seed, linkage, target_k)
+sync_query_params(n_points, k, spread, size_imbalance, bridge_strength, seed, shape, linkage, target_k)
 
 with st.spinner("Führe agglomeratives Clustering aus..."):
     instance, result = _compute_run(
-        int(n_points), int(k), spread, size_imbalance, bridge_strength, int(seed), linkage
+        int(n_points), int(k), spread, size_imbalance, bridge_strength, shape, int(seed), linkage
     )
 
 max_step = result.n_merges - 1
 target_step = min(max(step_for_target_k(instance.n_points, int(target_k)), 0), max_step)
-run_key = (n_points, k, spread, size_imbalance, bridge_strength, seed, linkage, target_k)
+run_key = (n_points, k, spread, size_imbalance, bridge_strength, shape, seed, linkage, target_k)
 if "ag_step" not in st.session_state or st.session_state.get("ag_step_owner") != run_key:
     st.session_state["ag_step"] = target_step
     st.session_state["ag_step_owner"] = run_key

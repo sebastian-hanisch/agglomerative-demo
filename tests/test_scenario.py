@@ -56,3 +56,46 @@ def test_bridge_points_lie_between_the_first_two_cluster_centers():
 
     assert bridge_points.shape[0] > 0
     assert np.mean((t >= -0.15) & (t <= 1.15)) > 0.9
+
+
+def test_default_shape_is_blobs():
+    instance = generate_instance(
+        n_points=60, k=3, spread=0.2, size_imbalance=0.0, bridge_strength=0.0, seed=1
+    )
+    assert instance.shape == "blobs"
+
+
+def test_moons_shape_produces_two_balanced_groups():
+    instance = generate_instance(
+        n_points=100, k=2, spread=0.1, size_imbalance=0.0, bridge_strength=0.0, seed=5, shape="moons"
+    )
+    assert instance.shape == "moons"
+    labels = np.array(instance.true_labels)
+    counts = np.bincount(labels[labels >= 0], minlength=2)
+    assert counts[0] == 50 and counts[1] == 50
+
+
+def test_moons_shape_with_k_greater_than_two_produces_k_balanced_arcs():
+    instance = generate_instance(
+        n_points=200, k=4, spread=0.1, size_imbalance=0.0, bridge_strength=0.0, seed=6, shape="moons"
+    )
+    labels = np.array(instance.true_labels)
+    counts = np.bincount(labels, minlength=4)
+    assert counts.min() == counts.max() == 50
+
+
+def test_size_imbalance_makes_group_zero_larger_for_moons_too():
+    instance = generate_instance(
+        n_points=200, k=2, spread=0.1, size_imbalance=0.85, bridge_strength=0.0, seed=7, shape="moons"
+    )
+    labels = np.array(instance.true_labels)
+    counts = np.bincount(labels, minlength=2)
+    assert counts[0] > counts[1]
+
+
+def test_bridge_works_between_moons_group_centroids_too():
+    instance = generate_instance(
+        n_points=100, k=2, spread=0.1, size_imbalance=0.0, bridge_strength=1.0, seed=2, shape="moons"
+    )
+    labels = np.array(instance.true_labels)
+    assert (labels == -1).sum() == 80  # 100% von MAX_BRIDGE_POINTS (80)

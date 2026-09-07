@@ -24,6 +24,10 @@ def _linkage_caster(v):
     return v if v in C.LINKAGES else C.DEFAULT_LINKAGE
 
 
+def _shape_caster(v):
+    return v if v in C.SHAPES else C.DEFAULT_SHAPE
+
+
 SETTING_SPECS = {
     "n_points_slider": SettingSpec("n", int, C.DEFAULT_N_POINTS, C.N_POINTS_MIN, C.N_POINTS_MAX),
     "k_slider": SettingSpec("k", int, C.DEFAULT_K, C.K_MIN, C.K_MAX),
@@ -35,6 +39,7 @@ SETTING_SPECS = {
         "bridge", float, C.DEFAULT_BRIDGE_STRENGTH, C.BRIDGE_STRENGTH_MIN, C.BRIDGE_STRENGTH_MAX
     ),
     "seed_input": SettingSpec("seed", int, C.DEFAULT_SEED, 0, 2_000_000_000),
+    "shape_radio": SettingSpec("shape", _shape_caster, C.DEFAULT_SHAPE),
     "linkage_radio": SettingSpec("linkage", _linkage_caster, C.DEFAULT_LINKAGE),
     "target_k_slider": SettingSpec("tk", int, C.DEFAULT_TARGET_K, C.TARGET_K_MIN, C.TARGET_K_MAX),
 }
@@ -71,7 +76,7 @@ def load_permalink_settings():
     st.session_state["permalink_loaded"] = True
 
 
-def sync_query_params(n_points, k, spread, size_imbalance, bridge_strength, seed, linkage, target_k):
+def sync_query_params(n_points, k, spread, size_imbalance, bridge_strength, seed, shape, linkage, target_k):
     try:
         st.query_params["n"] = str(int(n_points))
         st.query_params["k"] = str(int(k))
@@ -79,6 +84,7 @@ def sync_query_params(n_points, k, spread, size_imbalance, bridge_strength, seed
         st.query_params["simb"] = str(size_imbalance)
         st.query_params["bridge"] = str(bridge_strength)
         st.query_params["seed"] = str(int(seed))
+        st.query_params["shape"] = shape
         st.query_params["linkage"] = linkage
         st.query_params["tk"] = str(int(target_k))
     except Exception:
@@ -92,6 +98,7 @@ def apply_preset(name):
     st.session_state["spread_slider"] = p["spread"]
     st.session_state["size_imbalance_slider"] = p["size_imbalance"]
     st.session_state["bridge_strength_slider"] = p["bridge_strength"]
+    st.session_state["shape_radio"] = p["shape"]
     st.session_state["linkage_radio"] = p["linkage"]
     st.session_state["target_k_slider"] = p["target_k"]
     st.session_state["seed_input"] = p["seed"]

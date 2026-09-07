@@ -1,6 +1,8 @@
-"""Zufällige 2D-Punktwolken für die agglomerative Clustering-Demo: k Gauß-Cluster mit
-einstellbarem Größen-Ungleichgewicht, plus eine optionale dünne Brücke aus Punkten
-zwischen den ersten beiden Clustern - das Vehikel für den Single-Linkage-Chaining-Effekt."""
+"""Zufällige 2D-Punktwolken für die agglomerative Clustering-Demo: k Gauß-Cluster
+("blobs") oder k nicht-konvexe Halbkreis-Bögen ("moons", generalisiert wie in
+dbscan-demo/kmeans-demo), beide mit einstellbarem Größen-Ungleichgewicht, plus eine
+optionale dünne Brücke aus Punkten zwischen den ersten beiden Gruppen - das Vehikel für
+den Single-Linkage-Chaining-Effekt."""
 
 from dataclasses import dataclass
 
@@ -9,6 +11,8 @@ import numpy as np
 from ag_constants import MAX_BRIDGE_POINTS
 
 RING_RADIUS = 2.0
+ARC_RADIUS = 1.7
+ARC_RING_RADIUS = 4.5
 MIN_STD_FRACTION = 0.05
 
 
@@ -16,6 +20,7 @@ MIN_STD_FRACTION = 0.05
 class ClusteringInstance:
     points: tuple  # ((x, y), ...)
     true_labels: tuple  # Gruppenindex, oder -1 für Brückenpunkte (gehören zu keiner Gruppe)
+    shape: str  # "blobs" oder "moons"
     k: int
 
     @property
@@ -37,22 +42,79 @@ def _cluster_shares(k, size_imbalance):
     return weights / weights.sum()
 
 
+def _counts_from_shares(k, size_imbalance, n_points):
+    shares = _cluster_shares(k, size_imbalance)
+    counts = np.maximum(1, np.round(shares * n_points).astype(int))
+    counts[-1] += n_points - counts.sum()
+    return np.maximum(counts, 1)
+
+
 def _generate_blobs(n_points, k, spread, size_imbalance, rng):
     angles = np.linspace(0, 2 * np.pi, k, endpoint=False) + rng.uniform(-0.15, 0.15, size=k)
     centers = np.stack([RING_RADIUS * np.cos(angles), RING_RADIUS * np.sin(angles)], axis=1)
     std = max(spread, MIN_STD_FRACTION) * RING_RADIUS
 
-    shares = _cluster_shares(k, size_imbalance)
-    counts = np.maximum(1, np.round(shares * n_points).astype(int))
-    counts[-1] += n_points - counts.sum()
-    counts = np.maximum(counts, 1)
+    counts = _counts_from_shares(k, size_imbalance, n_points)
 
     points_per_cluster, labels_per_cluster = [], []
     for i in range(k):
         pts = rng.normal(loc=centers[i], scale=std, size=(counts[i], 2))
         points_per_cluster.append(pts)
         labels_per_cluster.append(np.full(counts[i], i))
-    return np.concatenate(points_per_cluster, axis=0), np.concatenate(labels_per_cluster, axis=0), centers
+    points = np.concatenate(points_per_cluster, axis=0)
+    labels = np.concatenate(labels_per_cluster, axis=0)
+    return points, labels, centers
+
+
+def _generate_moons(n_points, k, spread, size_imbalance, rng):
+    """k=2: das klassische "two moons"-Beispiel (wie in dbscan-demo/kmeans-demo). k>2: k
+    Halbkreis-Bögen wie Blütenblätter auf einem Ring, konkave Seite zum Zentrum.
+    size_imbalance wirkt wie bei "blobs": nur die Punktzahl je Gruppe verschiebt sich
+    (Gruppe 0 bekommt mehr Punkte), das Rauschen bleibt für alle Gruppen gleich - dieselbe
+    "Größe, nicht Dichte"-Semantik wie bei blobs, nur auf die Bogenform übertragen."""
+    counts = _counts_from_shares(k, size_imbalance, n_points)
+    noise_std = max(spread, MIN_STD_FRACTION) * ARC_RADIUS * 0.3
+
+    if k == 2:
+        t1 = rng.uniform(0, np.pi, counts[0])
+        x1 = ARC_RADIUS * np.cos(t1)
+        y1 = ARC_RADIUS * np.sin(t1)
+
+        t2 = rng.uniform(0, np.pi, counts[1])
+        x2 = ARC_RADIUS * (1 - np.cos(t2))
+        y2 = ARC_RADIUS * (0.5 - np.sin(t2))
+
+        pts1 = np.stack([x1, y1], axis=1) + rng.normal(scale=noise_std, size=(counts[0], 2))
+        pts2 = np.stack([x2, y2], axis=1) + rng.normal(scale=noise_std, size=(counts[1], 2))
+        points = np.concatenate([pts1, pts2], axis=0)
+        labels = np.concatenate([np.zeros(counts[0], dtype=int), np.ones(counts[1], dtype=int)])
+        centers = np.stack([points[labels == i].mean(axis=0) for i in range(k)])
+        return points, labels, centers
+
+    layout_angles = np.linspace(0, 2 * np.pi, k, endpoint=False) + rng.uniform(-0.1, 0.1, size=k)
+    arc_centers = np.stack(
+        [ARC_RING_RADIUS * np.cos(layout_angles), ARC_RING_RADIUS * np.sin(layout_angles)], axis=1
+    )
+
+    points_per_group, labels_per_group = [], []
+    for i in range(k):
+        t = rng.uniform(0, np.pi, counts[i])
+        local_x = ARC_RADIUS * np.cos(t)
+        local_y = ARC_RADIUS * np.sin(t)
+        # Um layout_angle_i + pi rotieren, damit die konkave Seite des Bogens zum
+        # Ringzentrum zeigt (Blütenblatt-Anordnung), statt nach außen.
+        rot = layout_angles[i] + np.pi
+        cos_r, sin_r = np.cos(rot), np.sin(rot)
+        rx = cos_r * local_x - sin_r * local_y
+        ry = sin_r * local_x + cos_r * local_y
+        pts = np.stack([rx, ry], axis=1) + arc_centers[i] + rng.normal(scale=noise_std, size=(counts[i], 2))
+        points_per_group.append(pts)
+        labels_per_group.append(np.full(counts[i], i))
+
+    points = np.concatenate(points_per_group, axis=0)
+    labels = np.concatenate(labels_per_group, axis=0)
+    centers = np.stack([points[labels == i].mean(axis=0) for i in range(k)])
+    return points, labels, centers
 
 
 def _add_bridge(points, labels, center_a, center_b, bridge_strength, rng):
@@ -67,18 +129,22 @@ def _add_bridge(points, labels, center_a, center_b, bridge_strength, rng):
     return np.concatenate([points, bridge_points]), np.concatenate([labels, bridge_labels])
 
 
-def generate_instance(n_points, k, spread, size_imbalance, bridge_strength, seed):
+def generate_instance(n_points, k, spread, size_imbalance, bridge_strength, seed, shape="blobs"):
     """bridge_strength (0 bis 1) erzeugt bis zu MAX_BRIDGE_POINTS zusaetzliche Punkte
-    entlang der Verbindungslinie zwischen den Zentren von Cluster 0 und Cluster 1 (nur bei
-    k>=2 wirksam) - das Vehikel, um Single-Linkage-Chaining sichtbar zu machen. Diese
-    Bruecken-Punkte gehoeren zu keiner echten Gruppe (true_label -1), aehnlich den
-    Ausreisserpunkten in dbscan-demo."""
+    entlang der Verbindungslinie zwischen den Zentren (Schwerpunkten) von Gruppe 0 und
+    Gruppe 1 (nur bei k>=2 wirksam), bei BEIDEN Formen - das Vehikel, um Single-Linkage-
+    Chaining sichtbar zu machen. Diese Bruecken-Punkte gehoeren zu keiner echten Gruppe
+    (true_label -1), aehnlich den Ausreisserpunkten in dbscan-demo."""
     rng = np.random.default_rng(seed)
-    points, labels, centers = _generate_blobs(n_points, k, spread, size_imbalance, rng)
+    if shape == "moons":
+        points, labels, centers = _generate_moons(n_points, k, spread, size_imbalance, rng)
+    else:
+        points, labels, centers = _generate_blobs(n_points, k, spread, size_imbalance, rng)
     if k >= 2 and bridge_strength > 0:
         points, labels = _add_bridge(points, labels, centers[0], centers[1], bridge_strength, rng)
     return ClusteringInstance(
         points=tuple(map(tuple, points.tolist())),
         true_labels=tuple(int(l) for l in labels),
+        shape=shape,
         k=k,
     )
