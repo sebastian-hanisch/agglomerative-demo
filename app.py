@@ -114,7 +114,7 @@ st.caption("🎯 Schnellstart – ein Beispielszenario laden:")
 PRESET_HELP = {
     "Einfaches Beispiel (klar getrennte Gruppen)": "Keine Brücke - alle vier Linkage-Kriterien liefern beim Schnitt auf die wahre Gruppenzahl dasselbe Ergebnis.",
     "Schwerer Fall (Chaining bei Single-Linkage)": "Zwei Gruppen plus eine dünne Punktbrücke dazwischen - Single-Linkage verschmilzt sie viel zu früh, die übrigen Kriterien bleiben sauber getrennt.",
-    "Ungleiche Clustergrößen": "Zeigt eine zweite Eigenart: Single-Linkage neigt zu einem großen Ketten-Cluster plus Einzelpunkten, Ward zu ausgeglicheneren Größen.",
+    "Ungleiche Clustergrößen": "Eine Gruppe ist deutlich größer als die übrigen. Bei der hier gewählten Streuung (0.2) treffen noch alle vier Kriterien die Gruppen exakt; erst bei mehr Streuung (ab etwa 0.3) neigt Single-Linkage zu einem großen Ketten-Cluster plus Einzelpunkten, die übrigen Kriterien zu ausgeglicheneren Größen.",
     "Viele Gruppen (Dendrogramm wächst)": "Mehr wahre Gruppen zeigen ein deutlich komplexeres Dendrogramm.",
     "Nicht-konvexe Formen (Single-Linkage im Vorteil)": "Zwei ineinander verschlungene Halbmonde ohne Brücke - hier dreht sich das Bild um: Single-Linkage folgt der gebogenen Form und trennt sauber, während Complete/Average/Ward quer über die Bögen schneiden.",
 }
@@ -267,8 +267,8 @@ st.markdown(
     """
 Live für Ihr aktuelles Szenario berechnet, nicht nur behauptet: der **Rand-Index** (Anteil
 der Punktpaare, bei denen die berechnete Aufteilung mit der tatsächlichen
-Gruppenzugehörigkeit übereinstimmt - 1.0 = perfekte Übereinstimmung, ~0.5 = kaum besser als
-Zufall) für alle vier Linkage-Kriterien, jeweils beim selben Ziel-k geschnitten:
+Gruppenzugehörigkeit übereinstimmt - 1.0 = perfekte Übereinstimmung; das Zufallsniveau liegt bei 2 Gruppen
+bei ~0.5, bei 3 Gruppen ~0.56, bei 6 Gruppen ~0.72) für alle vier Linkage-Kriterien, jeweils beim selben Ziel-k geschnitten:
 """
 )
 
@@ -331,7 +331,7 @@ sind (implementiert in `ag_algorithm.py`, `_lance_williams_coeffs`) - eine Forme
 vier Kriterien, für Ward angewendet auf quadrierte statt rohe Distanzen (die etablierte
 "ward.D2"-Konvention).
 
-Naive Laufzeit $O(n^3)$ - $n-1$ Fusionen, je $O(n^2)$ um das naechste Paar zu finden. Mit
+Naive Laufzeit $O(n^3)$ - $n-1$ Fusionen, je $O(n^2)$ um das nächste Paar zu finden. Mit
 effizienteren Verfahren (z. B. SLINK für Single-Linkage) sinkt das auf $O(n^2)$ - hier
 bewusst nicht implementiert.
 
@@ -361,6 +361,6 @@ st.markdown("---")
 
 st.caption(
     "Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – "
-    "Operations Research und Machine Learning. Interesse an einer maßgeschneiderten Lösung für "
-    "Ihr Unternehmen? [Kontakt aufnehmen](https://sebastianhanisch.net/kontakt.html)"
+    "Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). "
+    "Mehr zur Reihe: [Clustering erklärt: k-Means bis HDBSCAN](https://sebastianhanisch.net/konzepte-clustering.html)."
 )

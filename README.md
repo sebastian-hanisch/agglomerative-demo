@@ -51,8 +51,9 @@ Methoden:
   verschmilzt sie beim Ziel-k=2 praktisch zufällig (Rand-Index ≈ 0.5), während
   Complete/Average/Ward beide Gruppen perfekt trennen (Rand-Index 1.0). Live in der
   "📐"-Sektion nachgewiesen, nicht nur behauptet.
-- **Ungleiche Clustergrößen**: Single-Linkage neigt zu einem großen "Ketten"-Cluster plus
-  vielen Einzelpunkten, Ward zu ausgeglicheneren Größen.
+- **Ungleiche Clustergrößen**: bei der Streuung des Presets (0.2) treffen noch alle vier Kriterien
+  die Gruppen exakt; erst bei mehr Streuung (ab etwa 0.3) neigt Single-Linkage zu einem großen
+  "Ketten"-Cluster plus Einzelpunkten, die übrigen Kriterien zu ausgeglicheneren Größen.
 - **Viele Gruppen**: zeigt wachsende Dendrogramm-Komplexität.
 
 ## Visualisierung
@@ -115,6 +116,4 @@ pytest tests/ -v
 
 ---
 
-Teil des [Operations-Research-Demo-Portfolios](https://sebastianhanisch.net/demos.html) von
-[Sebastian Hanisch](https://sebastianhanisch.net) – Operations Research und Machine Learning.
-Interesse an einer maßgeschneiderten Lösung? [Kontakt aufnehmen](https://sebastianhanisch.net/kontakt.html).
+Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). Mehr zur Reihe: [Clustering erklärt: k-Means bis HDBSCAN](https://sebastianhanisch.net/konzepte-clustering.html).
